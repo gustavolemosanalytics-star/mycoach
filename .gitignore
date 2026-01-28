@@ -1,0 +1,17 @@
+# General
+.DS_Store
+.env
+*.log
+
+# Dependencies
+node_modules/
+venv/
+env/
+
+# Build
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
