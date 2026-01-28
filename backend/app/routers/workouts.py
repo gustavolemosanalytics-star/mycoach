@@ -15,13 +15,15 @@ from app.schemas.workout import (
     WeeklyStats
 )
 from app.utils.auth import get_current_user
+from app.database import SessionLocal
 
-router = APIRouter()
-
+from fastapi import BackgroundTasks
+from app.services.ai_service import ai_service
 
 @router.post("/", response_model=WorkoutResponse, status_code=status.HTTP_201_CREATED)
 async def create_workout(
     workout_data: WorkoutCreate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -43,6 +45,17 @@ async def create_workout(
     # Check for achievements
     from app.services.gamification import check_achievements
     check_achievements(current_user.id, db, workout)
+    
+    # Generate AI highlight in background
+    async def generate_and_save_highlight(w_id: int):
+        with SessionLocal() as session:
+            w = session.query(Workout).get(w_id)
+            if w:
+                highlight = await ai_service.generate_workout_highlight(w)
+                w.highlights = highlight
+                session.commit()
+
+    background_tasks.add_task(generate_and_save_highlight, workout.id)
     
     return workout
 

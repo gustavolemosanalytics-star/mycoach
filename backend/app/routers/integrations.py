@@ -96,8 +96,11 @@ async def strava_disconnect(
     return {"message": "Strava disconnected successfully"}
 
 
+from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
+
 @router.post("/strava/sync")
 async def strava_sync(
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -111,7 +114,7 @@ async def strava_sync(
     from app.services.strava_service import sync_strava_activities
     
     try:
-        synced_count = await sync_strava_activities(current_user, db)
+        synced_count = await sync_strava_activities(current_user, db, background_tasks=background_tasks)
         current_user.last_sync_at = datetime.utcnow()
         db.commit()
         

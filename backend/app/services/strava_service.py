@@ -36,7 +36,11 @@ async def refresh_strava_token(user: User, db: Session) -> str:
     return user.strava_access_token
 
 
-async def sync_strava_activities(user: User, db: Session, days: int = 30) -> int:
+from fastapi import BackgroundTasks
+from app.services.ai_service import ai_service
+from app.database import SessionLocal
+
+async def sync_strava_activities(user: User, db: Session, days: int = 30, background_tasks: BackgroundTasks = None) -> int:
     """Sync activities from Strava."""
     access_token = await refresh_strava_token(user, db)
     
@@ -55,6 +59,7 @@ async def sync_strava_activities(user: User, db: Session, days: int = 30) -> int
     
     activities = response.json()
     synced_count = 0
+    new_workout_ids = []
     
     for activity in activities:
         # Check if already synced
@@ -94,20 +99,44 @@ async def sync_strava_activities(user: User, db: Session, days: int = 30) -> int
         if workout.distance and workout.moving_time:
             workout.avg_pace = workout.moving_time / (workout.distance / 1000)
         
-        # Generate highlights
+        # Generate initial rule-based highlights
         workout.highlights = generate_highlights(workout, activity)
         
         db.add(workout)
+        db.flush() # Get the ID before commit
+        new_workout_ids.append(workout.id)
         synced_count += 1
     
     db.commit()
     
+    # Generate AI highlights in background for new workouts
+    if background_tasks and new_workout_ids:
+        async def batch_generate_highlights(ids: list):
+            with SessionLocal() as session:
+                for w_id in ids:
+                    w = session.query(Workout).get(w_id)
+                    if w:
+                        ai_highlight = await ai_service.generate_workout_highlight(w)
+                        # Merge with existing rule-based highlights
+                        total_highlights = w.highlights or []
+                        if isinstance(total_highlights, list):
+                            total_highlights.append({
+                                "type": "ai_insight",
+                                "message": ai_highlight.get("highlight"),
+                                "technical": ai_highlight.get("technical_insight"),
+                                "icon": "🤖"
+                            })
+                            w.highlights = total_highlights
+                            session.commit()
+
+        background_tasks.add_task(batch_generate_highlights, new_workout_ids)
+    
     # Check for achievements after sync
     from app.services.gamification import check_achievements
-    for workout in db.query(Workout).filter(
-        Workout.user_id == user.id
-    ).order_by(Workout.start_date.desc()).limit(synced_count).all():
-        check_achievements(user.id, db, workout)
+    for w_id in new_workout_ids:
+        w_obj = db.query(Workout).get(w_id)
+        if w_obj:
+            check_achievements(user.id, db, w_obj)
     
     return synced_count
 

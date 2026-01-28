@@ -33,6 +33,7 @@ export default function Dashboard() {
     const [recentWorkouts, setRecentWorkouts] = useState([]);
     const [wellness, setWellness] = useState(null);
     const [gamification, setGamification] = useState(null);
+    const [aiAnalysis, setAiAnalysis] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -41,12 +42,13 @@ export default function Dashboard() {
 
     const loadDashboardData = async () => {
         try {
-            const [statsRes, weeklyRes, workoutsRes, wellnessRes, gamRes] = await Promise.all([
+            const [statsRes, weeklyRes, workoutsRes, wellnessRes, gamRes, aiRes] = await Promise.all([
                 usersAPI.getStats(),
                 workoutsAPI.getWeekly(),
                 workoutsAPI.list({ per_page: 5 }),
                 wellnessAPI.getToday().catch(() => ({ data: null })),
-                achievementsAPI.getStats()
+                achievementsAPI.getStats(),
+                integrationsAPI.getWeeklyAnalysis().catch(() => ({ data: null }))
             ]);
 
             setStats(statsRes.data);
@@ -54,6 +56,7 @@ export default function Dashboard() {
             setRecentWorkouts(workoutsRes.data.workouts);
             setWellness(wellnessRes.data);
             setGamification(gamRes.data);
+            setAiAnalysis(aiRes.data);
         } catch (error) {
             console.error('Error loading dashboard:', error);
         } finally {
@@ -96,6 +99,28 @@ export default function Dashboard() {
                     + Novo Treino
                 </Link>
             </header>
+
+            {/* AI Analysis Section */}
+            {aiAnalysis && (
+                <div className="card ai-analysis-card">
+                    <div className="card-header">
+                        <h3 className="card-title ai-title">
+                            <Zap size={18} className="ai-icon-zap" /> Análise do MyCoach
+                        </h3>
+                        <span className={`status-badge ${aiAnalysis.status}`}>
+                            {aiAnalysis.status === 'improving' ? '🚀 Evoluindo' :
+                                aiAnalysis.status === 'fatigued' ? '⚠️ Fadiga' : '✅ Estável'}
+                        </span>
+                    </div>
+                    <div className="ai-analysis-content">
+                        <p className="ai-summary">{aiAnalysis.summary}</p>
+                        <div className="ai-recommendation">
+                            <span className="ai-label">Recomendação:</span>
+                            <p>{aiAnalysis.recommendation}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Cards */}
             <div className="stats-grid">

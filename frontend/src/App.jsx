@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Wellness from './pages/Wellness';
 import Achievements from './pages/Achievements';
+import WorkoutDetail from './pages/WorkoutDetail';
 import './index.css';
 
 // Placeholder pages (to be expanded)
@@ -102,6 +103,7 @@ function App() {
             <Route path="/workouts" element={<Workouts />} />
             <Route path="/wellness" element={<Wellness />} />
             <Route path="/achievements" element={<Achievements />} />
+            <Route path="/workouts/:id" element={<WorkoutDetail />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/integrations" element={<Integrations />} />
             <Route path="/settings" element={<Settings />} />

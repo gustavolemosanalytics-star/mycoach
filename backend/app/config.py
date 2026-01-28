@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # Frontend URL (for CORS)
     frontend_url: str = "http://localhost:5173"
     
+    # AI (OpenAI)
+    openai_api_key: Optional[str] = None
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

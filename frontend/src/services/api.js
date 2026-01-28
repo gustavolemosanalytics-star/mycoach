@@ -26,19 +26,19 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
         try {
           const response = await api.post('/auth/refresh', { refresh_token: refreshToken });
           const { access_token, refresh_token: newRefreshToken } = response.data;
-          
+
           localStorage.setItem('access_token', access_token);
           localStorage.setItem('refresh_token', newRefreshToken);
-          
+
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
           return api(originalRequest);
         } catch (refreshError) {
@@ -48,14 +48,14 @@ api.interceptors.response.use(
         }
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
 
 // Auth API
 export const authAPI = {
-  login: (email, password) => 
+  login: (email, password) =>
     api.post('/auth/login', new URLSearchParams({ username: email, password }), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }),
@@ -99,12 +99,14 @@ export const achievementsAPI = {
   getProgress: () => api.get('/achievements/me/progress'),
 };
 
-// Integrations API
+// Integrations & Insights API
 export const integrationsAPI = {
   getStatus: () => api.get('/integrations/status'),
   stravaConnect: () => api.get('/integrations/strava/connect'),
   stravaDisconnect: () => api.delete('/integrations/strava/disconnect'),
   stravaSync: () => api.post('/integrations/strava/sync'),
+  getWeeklyAnalysis: () => api.get('/insights/weekly-analysis'),
+  getWorkoutHighlight: (id) => api.get(`/insights/workout/${id}/highlight`),
 };
 
 export default api;

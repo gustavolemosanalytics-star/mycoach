@@ -297,6 +297,77 @@
     color: var(--text-secondary);
 }
 
+/* AI Analysis Card */
+.ai-analysis-card {
+    background: linear-gradient(135deg, var(--bg-card), var(--primary-50));
+    border: 1px solid var(--primary-200);
+    grid-column: span 2;
+}
+
+.ai-icon-zap {
+    color: var(--primary-600);
+    animation: AIpulse 2s infinite;
+}
+
+.ai-analysis-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.ai-summary {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    line-height: 1.4;
+}
+
+.ai-recommendation {
+    background: rgba(255, 255, 255, 0.5);
+    padding: var(--space-4);
+    border-radius: var(--radius);
+    border: 1px dashed var(--primary-300);
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+}
+
+.status-badge.improving {
+    background: var(--success-100);
+    color: var(--success-700);
+}
+
+.status-badge.fatigued {
+    background: var(--error-100);
+    color: var(--error-700);
+}
+
+.status-badge.stable {
+    background: var(--primary-100);
+    color: var(--primary-700);
+}
+
+@keyframes AIpulse {
+    0% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    100% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+}
+
 @media (max-width: 1024px) {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -309,7 +380,8 @@
     .chart-card,
     .wellness-card,
     .workouts-card,
-    .gamification-card {
+    .gamification-card,
+    .ai-analysis-card {
         grid-column: 1;
         grid-row: auto;
     }

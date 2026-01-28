@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import init_db
-from app.routers import auth, users, workouts, wellness, achievements, integrations
+from app.routers import auth, users, workouts, wellness, achievements, integrations, insights
 
 settings = get_settings()
 
@@ -34,6 +34,7 @@ app.include_router(workouts.router, prefix="/api/workouts", tags=["Workouts"])
 app.include_router(wellness.router, prefix="/api/wellness", tags=["Wellness"])
 app.include_router(achievements.router, prefix="/api/achievements", tags=["Achievements"])
 app.include_router(integrations.router, prefix="/api/integrations", tags=["Integrations"])
+app.include_router(insights.router, prefix="/api")
 
 
 @app.on_event("startup")
