@@ -7,36 +7,10 @@ import Dashboard from './pages/Dashboard';
 import Wellness from './pages/Wellness';
 import Achievements from './pages/Achievements';
 import WorkoutDetail from './pages/WorkoutDetail';
-import './index.css';
-
-// Placeholder pages (to be expanded)
-function Workouts() {
-  return (
-    <div>
-      <header className="page-header">
-        <h1 className="page-title">Treinos</h1>
-        <p className="page-subtitle">Histórico e análise de treinos</p>
-      </header>
-      <div className="card">
-        <p>Página de treinos em desenvolvimento...</p>
-      </div>
-    </div>
-  );
-}
-
-function Analytics() {
-  return (
-    <div>
-      <header className="page-header">
-        <h1 className="page-title">Analytics</h1>
-        <p className="page-subtitle">Análise avançada de performance</p>
-      </header>
-      <div className="card">
-        <p>Página de analytics em desenvolvimento...</p>
-      </div>
-    </div>
-  );
-}
+import Workouts from './pages/Workouts';
+import Analytics from './pages/Analytics';
+import Groups from './pages/Groups';
+import Nutrition from './pages/Nutrition';
 
 function Integrations() {
   return (
@@ -107,6 +81,10 @@ function App() {
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/integrations" element={<Integrations />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/nutrition" element={<Nutrition />} />
+            <Route path="/nutrition/anamnesis" element={<Anamnesis />} />
+            <Route path="/nutrition/chat" element={<NutritionChat />} />
+            <Route path="/community" element={<Groups />} />
           </Route>
 
           {/* Catch all */}

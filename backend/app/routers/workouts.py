@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import Optional, List
@@ -16,9 +16,21 @@ from app.schemas.workout import (
 )
 from app.utils.auth import get_current_user
 from app.database import SessionLocal
+from app.services.garmin_service import garmin_service
 
 from fastapi import BackgroundTasks
 from app.services.ai_service import ai_service
+
+router = APIRouter()
+
+async def generate_and_save_highlight(w_id: int):
+    """Background task to generate and save AI highlight."""
+    with SessionLocal() as session:
+        w = session.query(Workout).get(w_id)
+        if w:
+            highlight = await ai_service.generate_workout_highlight(w)
+            w.highlights = highlight
+            session.commit()
 
 @router.post("/", response_model=WorkoutResponse, status_code=status.HTTP_201_CREATED)
 async def create_workout(
@@ -46,18 +58,66 @@ async def create_workout(
     from app.services.gamification import check_achievements
     check_achievements(current_user.id, db, workout)
     
-    # Generate AI highlight in background
-    async def generate_and_save_highlight(w_id: int):
-        with SessionLocal() as session:
-            w = session.query(Workout).get(w_id)
-            if w:
-                highlight = await ai_service.generate_workout_highlight(w)
-                w.highlights = highlight
-                session.commit()
-
     background_tasks.add_task(generate_and_save_highlight, workout.id)
     
     return workout
+
+
+@router.post("/upload-tcx", response_model=WorkoutResponse, status_code=status.HTTP_201_CREATED)
+async def upload_tcx(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Upload a Garmin TCX file and create a workout from it."""
+    if not file.filename.endswith('.tcx'):
+        raise HTTPException(status_code=400, detail="Invalid file format. Please upload a .tcx file.")
+    
+    try:
+        content = await file.read()
+        parsed_data = garmin_service.parse_tcx(content)
+        
+        # Create Workout from parsed data
+        workout = Workout(
+            user_id=current_user.id,
+            source="garmin",
+            name=parsed_data["name"],
+            sport_type=parsed_data["sport_type"],
+            start_date=datetime.fromisoformat(parsed_data["start_date"].replace('Z', '+00:00')),
+            elapsed_time=int(parsed_data["total_time"]),
+            moving_time=int(parsed_data["total_time"]),
+            distance=parsed_data["total_distance"],
+            avg_heart_rate=parsed_data["avg_hr"],
+            max_heart_rate=parsed_data["max_hr"],
+            calories=parsed_data["calories"],
+            track_points=parsed_data["track_points"],
+            laps=parsed_data["laps"]
+        )
+
+        # Set start lat/lng from first trackpoint
+        if parsed_data["track_points"]:
+            first_pt = parsed_data["track_points"][0]
+            workout.start_lat = first_pt.get('lat')
+            workout.start_lng = first_pt.get('lng')
+
+        # Calculate pace
+        if workout.distance and workout.elapsed_time:
+            workout.avg_pace = (workout.elapsed_time / (workout.distance / 1000))
+
+        db.add(workout)
+        db.commit()
+        db.refresh(workout)
+
+        # Achievements and AI
+        from app.services.gamification import check_achievements
+        check_achievements(current_user.id, db, workout)
+        background_tasks.add_task(generate_and_save_highlight, workout.id)
+
+        return workout
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing TCX file: {str(e)}")
 
 
 @router.get("/", response_model=WorkoutListResponse)

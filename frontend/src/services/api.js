@@ -77,6 +77,13 @@ export const workoutsAPI = {
   create: (data) => api.post('/workouts', data),
   update: (id, data) => api.put(`/workouts/${id}`, data),
   delete: (id) => api.delete(`/workouts/${id}`),
+  uploadTCX: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/workouts/upload-tcx', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
   getSummary: (days) => api.get('/workouts/summary', { params: { days } }),
   getWeekly: () => api.get('/workouts/weekly'),
 };
@@ -107,6 +114,27 @@ export const integrationsAPI = {
   stravaSync: () => api.post('/integrations/strava/sync'),
   getWeeklyAnalysis: () => api.get('/insights/weekly-analysis'),
   getWorkoutHighlight: (id) => api.get(`/insights/workout/${id}/highlight`),
+};
+
+// Nutrition API
+export const nutritionAPI = {
+  getProfile: () => api.get('/nutrition/profile'),
+  updateProfile: (data) => api.post('/nutrition/profile', data),
+  getDailySummary: (date) => api.get('/nutrition/daily-summary', { params: { summary_date: date } }),
+  logMeal: (data) => api.post('/nutrition/log-meal', data),
+  chat: (message, history) => api.post('/nutrition/chat', { message, history }),
+};
+
+export const analyticsAPI = {
+  getPerformanceLoad: (days) => api.get('/analytics/performance-load', { params: { days } }),
+  getHRZones: (days) => api.get('/analytics/hr-zones-distribution', { params: { days } })
+};
+
+export const groupsAPI = {
+  list: () => api.get('/groups'),
+  create: (data) => api.post('/groups', data),
+  join: (id) => api.post(`/groups/${id}/join`),
+  getFeed: () => api.get('/groups/feed')
 };
 
 export default api;

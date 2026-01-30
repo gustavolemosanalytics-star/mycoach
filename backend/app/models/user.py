@@ -48,6 +48,9 @@ class User(Base):
     workouts = relationship("Workout", back_populates="user", cascade="all, delete-orphan")
     wellness_entries = relationship("WellnessEntry", back_populates="user", cascade="all, delete-orphan")
     user_achievements = relationship("UserAchievement", back_populates="user", cascade="all, delete-orphan")
+    nutrition_profile = relationship("NutritionProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    meal_logs = relationship("MealLog", back_populates="user", cascade="all, delete-orphan")
+    meal_plans = relationship("MealPlan", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User {self.email}>"

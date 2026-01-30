@@ -23,6 +23,29 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './WorkoutDetail.css';
 
+import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icons in Leaflet + React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function MapBounds({ points }) {
+    const map = useMap();
+    useEffect(() => {
+        if (points && points.length > 0) {
+            const bounds = L.latLngBounds(points);
+            map.fitBounds(bounds, { padding: [20, 20] });
+        }
+    }, [points, map]);
+    return null;
+}
+
 export default function WorkoutDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -75,6 +98,7 @@ export default function WorkoutDetail() {
 
     const aiInsight = workout.highlights?.find(h => h.type === 'ai_insight');
     const regularHighlights = workout.highlights?.filter(h => h.type !== 'ai_insight') || [];
+    const trackPoints = workout.track_points?.filter(p => p.lat && p.lng).map(p => [p.lat, p.lng]) || [];
 
     return (
         <div className="workout-detail-page">
@@ -137,6 +161,33 @@ export default function WorkoutDetail() {
                                     <p>{aiInsight.technical}</p>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Real Map Section */}
+                {trackPoints.length > 0 && (
+                    <div className="card map-card">
+                        <div className="card-header">
+                            <h3 className="card-title"><MapIcon size={18} /> Mapa do Percurso</h3>
+                        </div>
+                        <div className="map-container-wrapper" style={{ height: '400px', borderRadius: 'var(--radius)', overflow: 'hidden', marginTop: 'var(--space-4)' }}>
+                            <MapContainer
+                                center={trackPoints[0]}
+                                zoom={13}
+                                style={{ height: '100%', width: '100%' }}
+                                scrollWheelZoom={false}
+                            >
+                                <TileLayer
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+                                />
+                                <Polyline
+                                    positions={trackPoints}
+                                    pathOptions={{ color: 'var(--primary-600)', weight: 4 }}
+                                />
+                                <MapBounds points={trackPoints} />
+                            </MapContainer>
                         </div>
                     </div>
                 )}
@@ -204,20 +255,6 @@ export default function WorkoutDetail() {
                     <div className="card description-card">
                         <h3 className="card-title">Notas</h3>
                         <p className="workout-description-text">{workout.description}</p>
-                    </div>
-                )}
-
-                {/* Map Placeholder */}
-                {workout.polyline && (
-                    <div className="card map-card">
-                        <div className="card-header">
-                            <h3 className="card-title"><MapIcon size={18} /> Mapa do Percurso</h3>
-                        </div>
-                        <div className="map-placeholder">
-                            <div className="map-info">
-                                Visualização do mapa em desenvolvimento 🏃‍♂️
-                            </div>
-                        </div>
                     </div>
                 )}
             </div>

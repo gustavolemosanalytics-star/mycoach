@@ -1,23 +1,27 @@
 import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard,
-    Dumbbell,
     Heart,
-    Trophy,
     Settings,
     LogOut,
     Link as LinkIcon,
-    TrendingUp
+    TrendingUp,
+    Activity,
+    Utensils,
+    Award,
+    Users
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
 
 const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/workouts', icon: Dumbbell, label: 'Treinos' },
+    { path: '/workouts', icon: Activity, label: 'Treinos' },
+    { path: '/community', icon: Users, label: 'Comunidade' }, // Added Comunidade link
     { path: '/wellness', icon: Heart, label: 'Bem-estar' },
-    { path: '/achievements', icon: Trophy, label: 'Conquistas' },
-    { path: '/analytics', icon: TrendingUp, label: 'Analytics' },
+    { path: '/nutrition', icon: Utensils, label: 'Nutrição' },
+    { path: '/achievements', icon: Award, label: 'Conquistas' },
+    { path: '/analytics', icon: TrendingUp, label: 'Analytics' }, // Analytics link moved and kept
     { path: '/integrations', icon: LinkIcon, label: 'Integrações' },
     { path: '/settings', icon: Settings, label: 'Configurações' },
 ];

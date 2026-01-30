@@ -9,9 +9,12 @@ import json
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+from ..models.nutrition import NutritionProfile, MealLog, MealPlan
+
 class AIService:
     def __init__(self):
         self.client = OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
+        self.model = "gpt-4o" # As per NeuralNutri requirements
 
     def _is_available(self) -> bool:
         if not self.client:
@@ -25,10 +28,7 @@ class AIService:
             return {"highlight": "Treino concluído com sucesso! (IA não configurada)", "technical_insight": ""}
 
         sport_map = {
-            "run": "Corrida",
-            "ride": "Ciclismo",
-            "swim": "Natação",
-            "strength": "Fortalecimento"
+            "run": "Corrida", "ride": "Ciclismo", "swim": "Natação", "strength": "Fortalecimento"
         }
         
         prompt = f"""
@@ -46,7 +46,7 @@ class AIService:
 
         try:
             response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": "Você é o MyCoach, um treinador de triathlon experiente, motivacional e focado em performance data-driven."},
                     {"role": "user", "content": prompt}
@@ -83,7 +83,7 @@ class AIService:
 
         try:
             response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": "Você é o MyCoach, analisando o balanço entre carga e recuperação de um atleta de elite."},
                     {"role": "user", "content": prompt}
@@ -94,5 +94,96 @@ class AIService:
         except Exception as e:
             logger.error(f"Error generating weekly analysis: {e}")
             return {"summary": "Semana concluída com volume sólido.", "recommendation": "Escute seu corpo e priorize o descanso se necessário.", "status": "stable"}
+
+    async def nutrition_chat(self, user_id: int, message: str, history: List[Dict], profile: NutritionProfile) -> Dict:
+        """Copiloto Neural de Nutrição com suporte a ferramentas."""
+        if not self._is_available():
+            return {"message": "Serviço de nutrição temporariamente indisponível."}
+
+        system_prompt = f"""
+        Você é o Copiloto Neural do MyCoach, um Nutricionista IA avançado.
+        Perfil do Usuário:
+        - Objetivo: {profile.goal}
+        - TDEE: {profile.tdee} kcal
+        - Macros Alvo: P:{profile.target_protein}g, C:{profile.target_carbs}g, G:{profile.target_fat}g
+        
+        Sua missão é ajudar o usuário a atingir seus objetivos através de conselhos baseados em dados, 
+        criação de planos alimentares (`save_meal_plan`) e registro de refeições (`log_meal`).
+        Sempre responda de forma profissional, motivacional e baseada em evidências.
+        """
+
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "log_meal",
+                    "description": "Registra uma refeição consumida pelo usuário",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string", "description": "Nome da refeição (ex: Café da manhã)"},
+                            "foods": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {"type": "string"},
+                                        "amount": {"type": "number"},
+                                        "unit": {"type": "string"},
+                                        "calories": {"type": "integer"},
+                                        "protein": {"type": "number"},
+                                        "carbs": {"type": "number"},
+                                        "fat": {"type": "number"}
+                                    }
+                                }
+                            }
+                        },
+                        "required": ["name", "foods"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "save_meal_plan",
+                    "description": "Salva um plano alimentar sugerido para o usuário",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string"},
+                            "content": {"type": "object", "description": "Estrutura completa das refeições e macros"}
+                        },
+                        "required": ["title", "content"]
+                    }
+                }
+            }
+        ]
+
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend(history[-10:]) # Últimas 10 mensagens
+        messages.append({"role": "user", "content": message})
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                tools=tools,
+                tool_choice="auto"
+            )
+            
+            response_message = response.choices[0].message
+            tool_calls = response_message.tool_calls
+
+            if tool_calls:
+                # Retorna os tool_calls para serem processados pelo router/service
+                return {
+                    "message": response_message.content or "Processando sua solicitação...",
+                    "tool_calls": tool_calls
+                }
+            
+            return {"message": response_message.content}
+        except Exception as e:
+            logger.error(f"Error in nutrition chat: {e}")
+            return {"message": "Desculpe, tive um problema ao processar sua solicitação de nutrição."}
 
 ai_service = AIService()

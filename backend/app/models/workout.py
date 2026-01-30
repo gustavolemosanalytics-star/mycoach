@@ -80,8 +80,9 @@ class Workout(Base):
     humidity = Column(Float, nullable=True)  # percentage
     wind_speed = Column(Float, nullable=True)  # km/h
     
-    # GPS data
+    # GPS and Sensor data streams
     polyline = Column(Text, nullable=True)  # Encoded polyline for map
+    track_points = Column(JSON, nullable=True)  # List of {lat, lng, alt, heart_rate, cadence, time}
     start_lat = Column(Float, nullable=True)
     start_lng = Column(Float, nullable=True)
     
