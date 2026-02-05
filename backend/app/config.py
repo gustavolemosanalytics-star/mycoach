@@ -35,9 +35,17 @@ class Settings(BaseSettings):
     # AI (OpenAI)
     openai_api_key: Optional[str] = None
     
+    # Default Thresholds
+    default_ftp: int = 200
+    default_css_pace: int = 110
+    default_run_threshold: int = 300
+    default_fc_max: int = 185
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"
+
 
 
 @lru_cache()

@@ -17,7 +17,6 @@ import './Sidebar.css';
 const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/workouts', icon: Activity, label: 'Treinos' },
-    { path: '/community', icon: Users, label: 'Comunidade' }, // Added Comunidade link
     { path: '/wellness', icon: Heart, label: 'Bem-estar' },
     { path: '/nutrition', icon: Utensils, label: 'Nutrição' },
     { path: '/achievements', icon: Award, label: 'Conquistas' },

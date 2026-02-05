@@ -9,7 +9,6 @@ import Achievements from './pages/Achievements';
 import WorkoutDetail from './pages/WorkoutDetail';
 import Workouts from './pages/Workouts';
 import Analytics from './pages/Analytics';
-import Groups from './pages/Groups';
 import Nutrition from './pages/Nutrition';
 
 function Integrations() {
@@ -84,7 +83,6 @@ function App() {
             <Route path="/nutrition" element={<Nutrition />} />
             <Route path="/nutrition/anamnesis" element={<Anamnesis />} />
             <Route path="/nutrition/chat" element={<NutritionChat />} />
-            <Route path="/community" element={<Groups />} />
           </Route>
 
           {/* Catch all */}

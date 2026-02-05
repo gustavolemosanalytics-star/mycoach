@@ -29,5 +29,14 @@ def get_db():
 
 def init_db():
     """Initialize database tables."""
-    from app.models import user, workout, wellness, achievement
-    Base.metadata.create_all(bind=engine)
+    from app.models import (
+        user, workout, wellness, achievement, nutrition, groups,
+        athlete, activity, daily_metrics, strava_tokens, training_plan, nutrition_scenario
+    )
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database initialized successfully")
+    except Exception as e:
+        print(f"❌ Error initializing database: {e}")
+        print("Check if DATABASE_URL is correct and the database is accessible.")
+

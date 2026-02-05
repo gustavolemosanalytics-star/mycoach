@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from app.database import get_db
 from app.models.user import User
-from app.models.nutrition import NutritionProfile, MealLog
+from app.models.nutrition import NutritionProfile, MealLog, MealPlan
 from app.schemas.nutrition import (
     NutritionProfileCreate, 
     NutritionProfileResponse, 
@@ -15,6 +15,7 @@ from app.schemas.nutrition import (
 )
 from app.utils.auth import get_current_user
 from app.services.nutrition_service import nutrition_service
+from app.services.ai_service import ai_service
 
 router = APIRouter()
 

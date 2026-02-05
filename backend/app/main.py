@@ -2,7 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import init_db
-from app.routers import auth, users, workouts, wellness, achievements, integrations, insights, nutrition, analytics, groups
+from app.routers import (
+    auth, users, workouts, wellness, achievements, integrations, 
+    insights, nutrition, analytics, groups, strava, activities, metrics, athlete, coach
+)
 
 settings = get_settings()
 
@@ -17,11 +20,7 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.frontend_url,
-        "http://localhost:5173",
-        "http://localhost:3000"
-    ],
+    allow_origins=["*"],  # Allow all for development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,7 +36,14 @@ app.include_router(integrations.router, prefix="/api/integrations", tags=["Integ
 app.include_router(insights.router, prefix="/api/insights", tags=["AI Insights"])
 app.include_router(nutrition.router, prefix="/api/nutrition", tags=["Nutrition"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
-app.include_router(groups.router, prefix="/api/groups", tags=["groups"])
+app.include_router(groups.router, prefix="/api/groups", tags=["Groups"])
+
+# New routers per specification
+app.include_router(strava.router, prefix="/api/strava", tags=["Strava"])
+app.include_router(activities.router, prefix="/api/activities", tags=["Activities"])
+app.include_router(metrics.router, prefix="/api/metrics", tags=["Metrics"])
+app.include_router(athlete.router, prefix="/api/athlete", tags=["Athlete"])
+app.include_router(coach.router, prefix="/api/coach", tags=["Coach"])
 
 
 @app.on_event("startup")

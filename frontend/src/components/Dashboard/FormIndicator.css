@@ -1,0 +1,94 @@
+.form-indicator {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #374151;
+}
+
+.form-indicator-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.form-indicator-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #f3f4f6;
+    margin: 0;
+}
+
+.form-status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.form-indicator-tsb {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.tsb-value {
+    font-size: 4rem;
+    font-weight: 800;
+    display: block;
+    line-height: 1;
+}
+
+.tsb-label {
+    font-size: 1rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.form-description {
+    text-align: center;
+    color: #d1d5db;
+    font-size: 0.875rem;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.form-metrics-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.metric-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.metric-value.ctl {
+    color: #3b82f6;
+}
+
+.metric-value.atl {
+    color: #ef4444;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 4px;
+}

@@ -1,140 +1,137 @@
-import axios from 'axios';
+/**
+ * API Service
+ * Centralized API client for MyCoach backend
+ */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor - add auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor - handle token refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (refreshToken) {
-        try {
-          const response = await api.post('/auth/refresh', { refresh_token: refreshToken });
-          const { access_token, refresh_token: newRefreshToken } = response.data;
-
-          localStorage.setItem('access_token', access_token);
-          localStorage.setItem('refresh_token', newRefreshToken);
-
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
-        }
-      }
-    }
-
-    return Promise.reject(error);
+// Helper to handle responses
+const handleResponse = async (response) => {
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new Error(error.detail || `HTTP ${response.status}`);
   }
-);
-
-// Auth API
-export const authAPI = {
-  login: (email, password) =>
-    api.post('/auth/login', new URLSearchParams({ username: email, password }), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    }),
-  register: (data) => api.post('/auth/register', data),
-  getMe: () => api.get('/auth/me'),
+  return response.json();
 };
 
-// Users API
-export const usersAPI = {
-  getProfile: () => api.get('/users/me'),
-  updateProfile: (data) => api.put('/users/me', data),
-  getStats: () => api.get('/users/me/stats'),
+// Strava API
+export const stravaApi = {
+  getAuthUrl: () => fetch(`${API_URL}/api/strava/auth`).then(handleResponse),
+  getStatus: () => fetch(`${API_URL}/api/strava/status`).then(handleResponse),
+  sync: (daysBack = 30) => fetch(`${API_URL}/api/strava/sync?days_back=${daysBack}`, { method: 'POST' }).then(handleResponse),
 };
 
-// Workouts API
-export const workoutsAPI = {
-  list: (params) => api.get('/workouts', { params }),
-  get: (id) => api.get(`/workouts/${id}`),
-  create: (data) => api.post('/workouts', data),
-  update: (id, data) => api.put(`/workouts/${id}`, data),
-  delete: (id) => api.delete(`/workouts/${id}`),
-  uploadTCX: (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post('/workouts/upload-tcx', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+// Activities API
+export const activitiesApi = {
+  list: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return fetch(`${API_URL}/api/activities${query ? '?' + query : ''}`).then(handleResponse);
   },
-  getSummary: (days) => api.get('/workouts/summary', { params: { days } }),
-  getWeekly: () => api.get('/workouts/weekly'),
+  get: (id) => fetch(`${API_URL}/api/activities/${id}`).then(handleResponse),
+  getStats: (days = 30) => fetch(`${API_URL}/api/activities/stats/summary?days=${days}`).then(handleResponse),
 };
 
-// Wellness API
-export const wellnessAPI = {
-  list: (params) => api.get('/wellness', { params }),
-  getToday: () => api.get('/wellness/today'),
-  getByDate: (date) => api.get(`/wellness/${date}`),
-  create: (data) => api.post('/wellness', data),
-  update: (date, data) => api.put(`/wellness/${date}`, data),
-  getTrends: (days) => api.get('/wellness/trends', { params: { days } }),
+// Metrics API
+export const metricsApi = {
+  getDaily: (fromDate, toDate) => {
+    const params = new URLSearchParams();
+    if (fromDate) params.append('from_date', fromDate);
+    if (toDate) params.append('to_date', toDate);
+    return fetch(`${API_URL}/api/metrics/daily?${params}`).then(handleResponse);
+  },
+  getCurrent: () => fetch(`${API_URL}/api/metrics/current`).then(handleResponse),
+  getProjection: (targetDate, taperIntensity = 0.5) =>
+    fetch(`${API_URL}/api/metrics/projection?target_date=${targetDate}&taper_intensity=${taperIntensity}`).then(handleResponse),
+  getWeeklySummary: (weeksBack = 4) => fetch(`${API_URL}/api/metrics/weekly-summary?weeks_back=${weeksBack}`).then(handleResponse),
 };
 
-// Achievements API
-export const achievementsAPI = {
-  listAll: () => api.get('/achievements'),
-  getMine: () => api.get('/achievements/me'),
-  getStats: () => api.get('/achievements/me/stats'),
-  getProgress: () => api.get('/achievements/me/progress'),
+// Athlete API
+export const athleteApi = {
+  getConfig: () => fetch(`${API_URL}/api/athlete/config`).then(handleResponse),
+  updateConfig: (config) => fetch(`${API_URL}/api/athlete/config`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  }).then(handleResponse),
+  logWeight: (weight, dateStr = null) => fetch(`${API_URL}/api/athlete/weight`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ weight_kg: weight, date_str: dateStr }),
+  }).then(handleResponse),
+  getWeightHistory: (days = 90) => fetch(`${API_URL}/api/athlete/weight-history?days=${days}`).then(handleResponse),
+  getThresholds: () => fetch(`${API_URL}/api/athlete/thresholds`).then(handleResponse),
 };
 
-// Integrations & Insights API
-export const integrationsAPI = {
-  getStatus: () => api.get('/integrations/status'),
-  stravaConnect: () => api.get('/integrations/strava/connect'),
-  stravaDisconnect: () => api.delete('/integrations/strava/disconnect'),
-  stravaSync: () => api.post('/integrations/strava/sync'),
-  getWeeklyAnalysis: () => api.get('/insights/weekly-analysis'),
-  getWorkoutHighlight: (id) => api.get(`/insights/workout/${id}/highlight`),
+// Coach (AI) API
+export const coachApi = {
+  chat: (message, history = []) => fetch(`${API_URL}/api/coach/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, history }),
+  }).then(handleResponse),
+  getWeeklyAnalysis: () => fetch(`${API_URL}/api/coach/weekly-analysis`).then(handleResponse),
+  getNutritionSuggestion: () => fetch(`${API_URL}/api/coach/nutrition-suggestion`).then(handleResponse),
 };
 
 // Nutrition API
-export const nutritionAPI = {
-  getProfile: () => api.get('/nutrition/profile'),
-  updateProfile: (data) => api.post('/nutrition/profile', data),
-  getDailySummary: (date) => api.get('/nutrition/daily-summary', { params: { summary_date: date } }),
-  logMeal: (data) => api.post('/nutrition/log-meal', data),
-  chat: (message, history) => api.post('/nutrition/chat', { message, history }),
+export const nutritionApi = {
+  getScenarios: () => fetch(`${API_URL}/api/nutrition/scenarios`).then(handleResponse),
+  getScenario: (code) => fetch(`${API_URL}/api/nutrition/scenario/${code}`).then(handleResponse),
+};
+
+// Export all
+export default {
+  strava: stravaApi,
+  activities: activitiesApi,
+  metrics: metricsApi,
+  athlete: athleteApi,
+  coach: coachApi,
+  nutrition: nutritionApi,
+};
+
+// --- Legacy Exports for Compatibility ---
+
+export const authAPI = {
+  login: (credentials) => fetch(`${API_URL}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  }).then(handleResponse),
+  register: (userData) => fetch(`${API_URL}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  }).then(handleResponse),
+};
+
+export const workoutsAPI = {
+  getAll: () => activitiesApi.list(),
+  getById: (id) => activitiesApi.get(id),
+};
+
+export const wellnessAPI = {
+  getLatest: () => fetch(`${API_URL}/api/wellness/latest`).then(handleResponse),
+  log: (data) => fetch(`${API_URL}/api/wellness`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }).then(handleResponse),
+};
+
+export const achievementsAPI = {
+  getAll: () => fetch(`${API_URL}/api/achievements`).then(handleResponse),
+};
+
+export const usersAPI = {
+  getProfile: () => athleteApi.getConfig(),
 };
 
 export const analyticsAPI = {
-  getPerformanceLoad: (days) => api.get('/analytics/performance-load', { params: { days } }),
-  getHRZones: (days) => api.get('/analytics/hr-zones-distribution', { params: { days } })
+  getSummary: () => activitiesApi.getStats(),
 };
 
-export const groupsAPI = {
-  list: () => api.get('/groups'),
-  create: (data) => api.post('/groups', data),
-  join: (id) => api.post(`/groups/${id}/join`),
-  getFeed: () => api.get('/groups/feed')
+export const integrationsAPI = {
+  getStravaStatus: () => stravaApi.getStatus(),
 };
 
-export default api;
+export const nutritionAPI = nutritionApi;
