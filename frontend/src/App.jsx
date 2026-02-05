@@ -10,34 +10,10 @@ import WorkoutDetail from './pages/WorkoutDetail';
 import Workouts from './pages/Workouts';
 import Analytics from './pages/Analytics';
 import Nutrition from './pages/Nutrition';
-
-function Integrations() {
-  return (
-    <div>
-      <header className="page-header">
-        <h1 className="page-title">Integrações</h1>
-        <p className="page-subtitle">Conecte seu Strava e Garmin</p>
-      </header>
-      <div className="card">
-        <p>Página de integrações em desenvolvimento...</p>
-      </div>
-    </div>
-  );
-}
-
-function Settings() {
-  return (
-    <div>
-      <header className="page-header">
-        <h1 className="page-title">Configurações</h1>
-        <p className="page-subtitle">Personalize sua experiência</p>
-      </header>
-      <div className="card">
-        <p>Página de configurações em desenvolvimento...</p>
-      </div>
-    </div>
-  );
-}
+import Anamnesis from './pages/Anamnesis';
+import NutritionChat from './pages/NutritionChat';
+import Settings from './pages/Settings';
+import Groups from './pages/Groups';
 
 function PublicRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -78,8 +54,9 @@ function App() {
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/workouts/:id" element={<WorkoutDetail />} />
             <Route path="/analytics" element={<Analytics />} />
-            <Route path="/integrations" element={<Integrations />} />
+            <Route path="/integrations" element={<Settings />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/groups" element={<Groups />} />
             <Route path="/nutrition" element={<Nutrition />} />
             <Route path="/nutrition/anamnesis" element={<Anamnesis />} />
             <Route path="/nutrition/chat" element={<NutritionChat />} />
