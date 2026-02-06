@@ -128,10 +128,35 @@ export const usersAPI = {
 
 export const analyticsAPI = {
   getSummary: () => activitiesApi.getStats(),
+  getPerformanceLoad: (days = 90) => {
+    const fromDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const toDate = new Date().toISOString().split('T')[0];
+    return metricsApi.getDaily(fromDate, toDate);
+  },
+  getHRZones: (days = 30) => fetch(`${API_URL}/api/analytics/hr-zones?days=${days}`).then(handleResponse),
+};
+
+export const groupsAPI = {
+  list: () => fetch(`${API_URL}/api/groups`).then(handleResponse),
+  getFeed: () => fetch(`${API_URL}/api/groups/feed`).then(handleResponse),
+};
+
+export const nutritionAPI = {
+  ...nutritionApi,
+  getProfile: () => fetch(`${API_URL}/api/nutrition/profile`).then(handleResponse),
+  updateProfile: (data) => fetch(`${API_URL}/api/nutrition/profile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }).then(handleResponse),
+  getDailySummary: (date) => fetch(`${API_URL}/api/nutrition/daily-summary?date=${date}`).then(handleResponse),
+  chat: (message, history) => fetch(`${API_URL}/api/nutrition/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, history }),
+  }).then(handleResponse),
 };
 
 export const integrationsAPI = {
   getStravaStatus: () => stravaApi.getStatus(),
 };
-
-export const nutritionAPI = nutritionApi;
