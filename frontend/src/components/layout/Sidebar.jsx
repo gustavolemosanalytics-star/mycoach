@@ -3,15 +3,12 @@ import {
     LayoutDashboard,
     Heart,
     Settings,
-    LogOut,
     Link as LinkIcon,
     TrendingUp,
     Activity,
     Utensils,
     Award,
-    Users
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
 
 const navItems = [
@@ -20,14 +17,12 @@ const navItems = [
     { path: '/wellness', icon: Heart, label: 'Bem-estar' },
     { path: '/nutrition', icon: Utensils, label: 'Nutrição' },
     { path: '/achievements', icon: Award, label: 'Conquistas' },
-    { path: '/analytics', icon: TrendingUp, label: 'Analytics' }, // Analytics link moved and kept
+    { path: '/analytics', icon: TrendingUp, label: 'Analytics' },
     { path: '/integrations', icon: LinkIcon, label: 'Integrações' },
     { path: '/settings', icon: Settings, label: 'Configurações' },
 ];
 
 export default function Sidebar() {
-    const { user, logout } = useAuth();
-
     return (
         <aside className="sidebar">
             <div className="sidebar-header">
@@ -38,12 +33,10 @@ export default function Sidebar() {
             </div>
 
             <div className="sidebar-user">
-                <div className="avatar">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </div>
+                <div className="avatar">G</div>
                 <div className="user-info">
-                    <span className="user-name">{user?.name || 'Atleta'}</span>
-                    <span className="user-level">Level {user?.level || 1}</span>
+                    <span className="user-name">Gustavo</span>
+                    <span className="user-level">Atleta</span>
                 </div>
             </div>
 
@@ -59,13 +52,6 @@ export default function Sidebar() {
                     </NavLink>
                 ))}
             </nav>
-
-            <div className="sidebar-footer">
-                <button className="nav-item logout" onClick={logout}>
-                    <LogOut size={20} />
-                    <span>Sair</span>
-                </button>
-            </div>
         </aside>
     );
 }

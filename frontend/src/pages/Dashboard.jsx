@@ -11,7 +11,6 @@ import {
     Award
 } from 'lucide-react';
 import { workoutsAPI, wellnessAPI, achievementsAPI, usersAPI } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -27,7 +26,6 @@ import {
 import './Dashboard.css';
 
 export default function Dashboard() {
-    const { user } = useAuth();
     const [stats, setStats] = useState(null);
     const [weeklyData, setWeeklyData] = useState(null);
     const [recentWorkouts, setRecentWorkouts] = useState([]);
@@ -92,7 +90,7 @@ export default function Dashboard() {
         <div className="dashboard">
             <header className="page-header">
                 <div>
-                    <h1 className="page-title">Olá, {user?.name?.split(' ')[0]}! 👋</h1>
+                    <h1 className="page-title">Olá, Gustavo! 👋</h1>
                     <p className="page-subtitle">Veja como está seu progresso esta semana</p>
                 </div>
                 <Link to="/workouts/new" className="btn btn-primary">

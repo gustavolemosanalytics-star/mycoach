@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { achievementsAPI } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import { Award, Lock, TrendingUp } from 'lucide-react';
 import './Achievements.css';
 
@@ -12,7 +11,6 @@ const TIER_COLORS = {
 };
 
 export default function Achievements() {
-    const { user } = useAuth();
     const [allAchievements, setAllAchievements] = useState([]);
     const [userAchievements, setUserAchievements] = useState([]);
     const [stats, setStats] = useState(null);
