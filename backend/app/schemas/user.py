@@ -1,76 +1,77 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
+import uuid
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, EmailStr
+
+from app.models.user import SportModality, ExperienceLevel
 
 
-class UserBase(BaseModel):
+class UserCreate(BaseModel):
     email: EmailStr
-    name: str
-
-
-class UserCreate(UserBase):
     password: str
-    sport_focus: Optional[str] = "triathlon"
+    full_name: str
+    modality: SportModality
+    experience_level: ExperienceLevel = ExperienceLevel.INTERMEDIATE
+    weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    hr_max: Optional[int] = None
+    hr_rest: Optional[int] = None
+    hr_threshold: Optional[int] = None
+    ftp: Optional[int] = None
+    css: Optional[float] = None
+    run_threshold_pace: Optional[float] = None
+    weekly_hours_available: float = 10.0
+    training_days_per_week: int = 6
 
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
-    bio: Optional[str] = None
-    avatar_url: Optional[str] = None
-    sport_focus: Optional[str] = None
-    timezone: Optional[str] = None
+    full_name: Optional[str] = None
+    weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    birth_date: Optional[datetime] = None
+    hr_max: Optional[int] = None
+    hr_rest: Optional[int] = None
+    hr_threshold: Optional[int] = None
+    ftp: Optional[int] = None
+    css: Optional[float] = None
+    run_threshold_pace: Optional[float] = None
+    vo2max_estimate: Optional[float] = None
+    weekly_hours_available: Optional[float] = None
+    training_days_per_week: Optional[int] = None
+    experience_level: Optional[ExperienceLevel] = None
 
 
-class UserResponse(UserBase):
-    id: int
-    avatar_url: Optional[str] = None
-    bio: Optional[str] = None
-    sport_focus: str
-    total_points: int
-    level: int
-    is_active: bool
-    is_premium: bool
-    strava_connected: bool = False
-    garmin_connected: bool = False
+class UserResponse(BaseModel):
+    id: uuid.UUID
+    email: str
+    full_name: str
+    modality: SportModality
+    experience_level: ExperienceLevel
+    weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    birth_date: Optional[datetime] = None
+    hr_max: Optional[int] = None
+    hr_rest: Optional[int] = None
+    hr_threshold: Optional[int] = None
+    ftp: Optional[int] = None
+    css: Optional[float] = None
+    run_threshold_pace: Optional[float] = None
+    vo2max_estimate: Optional[float] = None
+    weekly_hours_available: float
+    training_days_per_week: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-    
-    @classmethod
-    def from_orm_with_connections(cls, user):
-        return cls(
-            id=user.id,
-            email=user.email,
-            name=user.name,
-            avatar_url=user.avatar_url,
-            bio=user.bio,
-            sport_focus=user.sport_focus,
-            total_points=user.total_points,
-            level=user.level,
-            is_active=user.is_active,
-            is_premium=user.is_premium,
-            strava_connected=user.strava_access_token is not None,
-            garmin_connected=user.garmin_access_token is not None,
-            created_at=user.created_at
-        )
-
-
-class UserStats(BaseModel):
-    total_workouts: int
-    total_distance_km: float
-    total_time_hours: float
-    total_calories: int
-    current_streak: int
-    best_streak: int
-    achievements_count: int
+    model_config = {"from_attributes": True}
 
 
 class Token(BaseModel):
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
+    user_id: uuid.UUID
+    modality: SportModality
 
 
-class TokenData(BaseModel):
-    user_id: Optional[int] = None
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str

@@ -1,41 +1,31 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/layout/Layout';
-import Dashboard from './pages/Dashboard';
-import Wellness from './pages/Wellness';
-import Achievements from './pages/Achievements';
-import WorkoutDetail from './pages/WorkoutDetail';
-import Workouts from './pages/Workouts';
-import Analytics from './pages/Analytics';
-import Nutrition from './pages/Nutrition';
-import Anamnesis from './pages/Anamnesis';
-import NutritionChat from './pages/NutritionChat';
-import Settings from './pages/Settings';
-import Groups from './pages/Groups';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import AppLayout from './components/layout/AppLayout'
+import ProtectedRoute from './components/auth/ProtectedRoute'
+import PlanScreen from './pages/PlanScreen'
+import AddScreen from './pages/AddScreen'
+import ProfileScreen from './pages/ProfileScreen'
+import ActivityDetail from './pages/ActivityDetail'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/workouts" element={<Workouts />} />
-          <Route path="/wellness" element={<Wellness />} />
-          <Route path="/achievements" element={<Achievements />} />
-          <Route path="/workouts/:id" element={<WorkoutDetail />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/integrations" element={<Settings />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/groups" element={<Groups />} />
-          <Route path="/nutrition" element={<Nutrition />} />
-          <Route path="/nutrition/anamnesis" element={<Anamnesis />} />
-          <Route path="/nutrition/chat" element={<NutritionChat />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<PlanScreen />} />
+            <Route path="/add" element={<AddScreen />} />
+            <Route path="/profile" element={<ProfileScreen />} />
+            <Route path="/activity/:id" element={<ActivityDetail />} />
+          </Route>
         </Route>
 
-        {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  );
+  )
 }
-
-export default App;

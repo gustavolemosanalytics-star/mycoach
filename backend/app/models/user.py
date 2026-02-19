@@ -1,56 +1,62 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from app.database import Base
+import enum
+import uuid
+from datetime import datetime
+
+from sqlalchemy import String, Float, Integer, Boolean, DateTime, Enum
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.session import Base
+
+
+class SportModality(str, enum.Enum):
+    TRIATHLON = "triathlon"
+    RUNNING = "running"
+
+
+class ExperienceLevel(str, enum.Enum):
+    BEGINNER = "beginner"
+    INTERMEDIATE = "intermediate"
+    ADVANCED = "advanced"
+    ELITE = "elite"
 
 
 class User(Base):
-    """User model for athletes."""
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    name = Column(String(255), nullable=False)
-    
-    # Profile
-    avatar_url = Column(String(500), nullable=True)
-    bio = Column(Text, nullable=True)
-    sport_focus = Column(String(50), default="triathlon")  # triathlon, marathon, ultra
-    
-    # Strava Integration
-    strava_athlete_id = Column(Integer, nullable=True, unique=True)
-    strava_access_token = Column(String(500), nullable=True)
-    strava_refresh_token = Column(String(500), nullable=True)
-    strava_token_expires_at = Column(DateTime, nullable=True)
-    
-    # Garmin Integration
-    garmin_user_id = Column(String(255), nullable=True, unique=True)
-    garmin_access_token = Column(String(500), nullable=True)
-    garmin_refresh_token = Column(String(500), nullable=True)
-    garmin_token_expires_at = Column(DateTime, nullable=True)
-    
-    # Gamification
-    total_points = Column(Integer, default=0)
-    level = Column(Integer, default=1)
-    
-    # Settings
-    is_active = Column(Boolean, default=True)
-    is_premium = Column(Boolean, default=False)
-    timezone = Column(String(50), default="America/Sao_Paulo")
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    last_sync_at = Column(DateTime(timezone=True), nullable=True)
-    
-    # Relationships
-    workouts = relationship("Workout", back_populates="user", cascade="all, delete-orphan")
-    wellness_entries = relationship("WellnessEntry", back_populates="user", cascade="all, delete-orphan")
-    user_achievements = relationship("UserAchievement", back_populates="user", cascade="all, delete-orphan")
-    nutrition_profile = relationship("NutritionProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    meal_logs = relationship("MealLog", back_populates="user", cascade="all, delete-orphan")
-    meal_plans = relationship("MealPlan", back_populates="user", cascade="all, delete-orphan")
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    def __repr__(self):
-        return f"<User {self.email}>"
+    # Modalidade e experiencia
+    modality: Mapped[SportModality] = mapped_column(Enum(SportModality), nullable=False)
+    experience_level: Mapped[ExperienceLevel] = mapped_column(
+        Enum(ExperienceLevel), default=ExperienceLevel.INTERMEDIATE
+    )
+
+    # Dados fisicos
+    birth_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    height_cm: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # Metricas fisiologicas
+    hr_max: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    hr_rest: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    hr_threshold: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ftp: Mapped[int | None] = mapped_column(Integer, nullable=True)  # bike watts - triathlon only
+    css: Mapped[float | None] = mapped_column(Float, nullable=True)  # min/100m - triathlon only
+    run_threshold_pace: Mapped[float | None] = mapped_column(Float, nullable=True)  # sec/km
+    vo2max_estimate: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # Disponibilidade
+    weekly_hours_available: Mapped[float] = mapped_column(Float, default=10.0)
+    training_days_per_week: Mapped[int] = mapped_column(Integer, default=6)
+
+    # Relationships
+    races = relationship("TargetRace", back_populates="user", cascade="all, delete-orphan")
+    activities = relationship("Activity", back_populates="user", cascade="all, delete-orphan")
+    training_plans = relationship("TrainingPlan", back_populates="user", cascade="all, delete-orphan")
+    weekly_analyses = relationship("WeeklyAnalysis", back_populates="user", cascade="all, delete-orphan")
