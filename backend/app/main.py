@@ -4,10 +4,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.db.session import engine, Base
+import app.models  # noqa: F401 — register all models with Base.metadata
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Create all tables on startup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    print("Database tables created/verified")
     yield
 
 
