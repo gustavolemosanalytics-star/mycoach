@@ -10,10 +10,15 @@ import app.models  # noqa: F401 — register all models with Base.metadata
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create all tables on startup
+    from sqlalchemy import text
+    # Clean slate: drop old tables (v1 used integer IDs, v2 uses UUID)
+    async with engine.begin() as conn:
+        await conn.execute(text("DROP SCHEMA public CASCADE"))
+        await conn.execute(text("CREATE SCHEMA public"))
+    # Create all v2 tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("Database tables created/verified")
+    print("Database tables created (clean slate)")
     yield
 
 
