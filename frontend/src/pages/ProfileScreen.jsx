@@ -81,7 +81,7 @@ export default function ProfileScreen() {
               { key: 'weight_kg', label: 'Peso (kg)' },
               { key: 'height_cm', label: 'Altura (cm)' },
               { key: 'hr_max', label: 'FC Máx' },
-              { key: 'hr_rest', label: 'FC Rep' },
+              { key: 'hr_rest', label: 'FC Repouso' },
               { key: 'hr_threshold', label: 'FC Limiar' },
               { key: 'ftp', label: 'FTP (W)' },
               { key: 'run_threshold_pace', label: 'Pace Limiar' },

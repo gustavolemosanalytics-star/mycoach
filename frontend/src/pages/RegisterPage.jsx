@@ -201,7 +201,7 @@ export default function RegisterPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">FC Rep</label>
+                    <label className="block text-sm text-gray-400 mb-1">FC Repouso</label>
                     <input
                       type="number"
                       value={form.hr_rest}
