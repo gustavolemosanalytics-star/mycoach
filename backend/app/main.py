@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.session import engine, Base
@@ -10,15 +11,19 @@ import app.models  # noqa: F401 — register all models with Base.metadata
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from sqlalchemy import text
-    # Clean slate: drop old tables (v1 used integer IDs, v2 uses UUID)
-    async with engine.begin() as conn:
-        await conn.execute(text("DROP SCHEMA public CASCADE"))
-        await conn.execute(text("CREATE SCHEMA public"))
-    # Create all v2 tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    print("Database tables created (clean slate)")
+    # Try create_all first; if it fails (old schema conflict), nuke and retry
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("Database tables OK")
+    except Exception as e:
+        print(f"create_all failed ({e}), dropping old schema and retrying...")
+        async with engine.begin() as conn:
+            await conn.execute(text("DROP SCHEMA public CASCADE"))
+            await conn.execute(text("CREATE SCHEMA public"))
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("Database tables created (clean slate)")
     yield
 
 
@@ -29,19 +34,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
-origins = [
-    settings.FRONTEND_URL,
-    "http://localhost:5173",
-    "http://localhost:3000",
-]
-# Allow any Railway-generated domain
-if settings.APP_ENV == "production":
-    origins.append("https://*.up.railway.app")
+# CORS — allow all origins for now, lock down later
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https://.*\.up\.railway\.app",
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
